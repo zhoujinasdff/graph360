@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VR 全景图展示</title>
+  <script type="text/javascript" src="./src/js/pannellum.js"></script>
+  <link rel="stylesheet" type="text/css" href="./src/css/pannellum.css">
+  <script type="text/javascript" src="./src/js/libpannellum.js"></script>
+  <!-- <script type="text/javascript" src="https://cdn.pannellum.org/2.5/pannellum.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.pannellum.org/2.5/pannellum.css"> -->
+  <style>
+    /* 设置html和body为100%高度，使用flex布局 */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      display: flex;
+      font-family: Arial, sans-serif;
+    }
+
+    /* 侧边栏样式 */
+    #sidebar {
+      width: 0%;  /* 初始时，侧边栏宽度为0 */
+      height: 100vh;  /* 侧边栏的高度设置为视口的高度 */
+      padding: 10px;
+      border-right: 2px solid #ddd;  /* 更柔和的边框颜色 */
+      overflow-y: auto;
+      background-color: #f4f7f6;  /* 更柔和的背景色 */
+      position: fixed;
+      left: 0;
+      top: 0;
+      transition: width 0.3s ease;  /* 添加过渡效果 */
+    }
+
+    /* 按钮样式 */
+    #sidebar-button {
+      position: fixed;
+      top: 150px;
+      left: 10px;
+      z-index: 10;
+      background-color: #4caf50;  /* 柔和的绿色按钮 */
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #sidebar-button:hover {
+      background-color: #45a049;  /* 按钮悬停时颜色略深 */
+    }
+
+    /* 侧边栏列表 */
+    #sidebar ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #sidebar li {
+      cursor: pointer;
+      margin: 8px 0;
+      padding: 8px;
+      background: #83dae6;  /* 轻柔的蓝色背景 */
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    #sidebar li:hover {
+      background: #b2ebf2;  /* 列表项悬停时背景色加深 */
+    }
+
+    /* 全景图展示区样式 */
+    #panorama {
+      width: 100vw;  /* 设置全景图容器宽度为视口宽度 */
+      height: 100vh;  /* 设置全景图容器高度为视口的高度 */
+      margin-left: 0; /* 初始不留边栏空间 */
+      transition: margin-left 0.3s ease; /* 动态调整全景图的位置 */
+    }
+
+    /* 当侧边栏展开时，调整全景图的位置 */
+    #sidebar.open + #panorama {
+      margin-left: 20%;  /* 留出20%的空间给边栏 */
+    }
+
+    /* 当侧边栏展开时，调整按钮的位置 */
+    #sidebar.open + #panorama + #sidebar-button {
+      left: 20%;  /* 调整按钮位置 */
+    }
+  </style>
+</head>
+<body>
+
+  <button id="sidebar-button">展开边栏</button>
+
+  <div id="sidebar">
+    <h3>选择全景图</h3>
+    <ul id="image-list">
+      <!-- 图片列表将动态加载 -->
+    </ul>
+  </div>
+
+  <div id="panorama"></div>
+
+  <script>
+    // 手动列出文件夹中的图片名称
+    const images = [
+      '梅华路交香洲大道高70米.JPG',
+      '梅华路交香洲大道高70米2.JPG',
+      '梅华路交香洲大道高90米.JPG',
+      '梅华路交香洲大道高90米2.JPG',
+      '梅华路交香洲大道高120米.JPG',
+      '梅华路交香洲大道高120米2.JPG',
+      '人民路交迎宾路.JPG',
+      '上冲综合管理大楼.JPG',
+      '上冲综合管理大楼2.JPG',
+      'DJI_0982.JPG'
+    ];
+
+    // 初始化全景图展示
+    function loadPanorama(imageName) {
+      pannellum.viewer('panorama', {
+        "type": "equirectangular",
+        "panorama": './fig/' + imageName, // 加载对应图片
+        "autoLoad": true
+      });
+    }
+
+    // 创建侧边栏图片列表
+    function createSidebar() {
+      const imageList = document.getElementById('image-list');
+      images.forEach(image => {
+        // 去除文件后缀，只显示文件名
+        const imageName = image.split('.')[0];  // 使用split方法分离文件名和后缀
+
+        const listItem = document.createElement('li');
+        listItem.textContent = imageName;  // 显示不带后缀的文件名
+        listItem.onclick = () => loadPanorama(image);  // 点击时加载对应图片
+        imageList.appendChild(listItem);
+      });
+    }
+
+    // 切换侧边栏显示状态并更新按钮文本
+    document.getElementById('sidebar-button').onclick = function() {
+      const sidebar = document.getElementById('sidebar');
+      const panorama = document.getElementById('panorama');
+      const button = document.getElementById('sidebar-button');
+
+      if (sidebar.style.width === '20%') {
+        // 折叠侧边栏
+        sidebar.style.width = '0';
+        panorama.style.marginLeft = '0';
+        button.style.left = '10px';
+        button.textContent = '展开边栏';  // 更新文本
+      } else {
+        // 展开侧边栏
+        sidebar.style.width = '20%';  /* 修改为20% */
+        panorama.style.marginLeft = '20%';  /* 留出20%的空间 */
+        button.style.left = '20%';  /* 调整按钮位置 */
+        button.textContent = '收起边栏';  // 更新文本
+      }
+    };
+
+    // 初始化页面时加载第一个全景图
+    window.onload = function() {
+      createSidebar();
+      loadPanorama(images[0]); // 默认加载第一个全景图
+    };
+  </script>
+
+</body>
+</html>
